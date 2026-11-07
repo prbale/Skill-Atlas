@@ -1,0 +1,88 @@
+# Skill Atlas 1.2.0 — production stack
+#   1. cp .env.example .env              and edit it (domain, admin username)
+#   2. mkdir -p secrets && openssl rand -base64 24 > secrets/admin_password.txt   (or write your own, 12+ chars)
+#   3. docker compose up -d --build
+#   4. Open https://<your domain>, sign in as ADMIN_USERNAME with that password, choose a new one, turn on two-step.
+# Backups to S3/R2 as well:  docker compose --profile backup up -d
+name: skill-atlas
+
+services:
+  app:
+    image: skill-atlas:1.2.0
+    build: .
+    restart: unless-stopped
+    expose: ["8080"]                  # reachable only by Caddy on the internal network — never published
+    environment:
+      NODE_ENV: production
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN in .env, e.g. https://atlas.example.com}
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-1}
+      COOKIE_SECURE: "true"
+      REGISTRATION: ${REGISTRATION:-invite}
+      REQUIRE_ADMIN_MFA: ${REQUIRE_ADMIN_MFA:-true}
+      HIBP_CHECK: ${HIBP_CHECK:-true}
+      MAX_USERS: ${MAX_USERS:-50}
+      MAX_BODY_BYTES: ${MAX_BODY_BYTES:-2097152}
+      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-30}
+      SESSION_IDLE_DAYS: ${SESSION_IDLE_DAYS:-7}
+      ADMIN_SESSION_TTL_HOURS: ${ADMIN_SESSION_TTL_HOURS:-12}
+      BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+      BACKUP_KEEP: ${BACKUP_KEEP:-7}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD_FILE: /run/secrets/admin_password   # only read on first start, when no administrator exists
+    secrets: [admin_password]
+    volumes:
+      - atlas-data:/data
+    networks: [internal]
+    read_only: true
+    tmpfs: ["/tmp:size=16m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 200
+    logging: { driver: json-file, options: { max-size: "10m", max-file: "5" } }
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on: [app]
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN in .env, e.g. atlas.example.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [internal]
+    security_opt: ["no-new-privileges:true"]
+    logging: { driver: json-file, options: { max-size: "10m", max-file: "5" } }
+
+  # Optional continuous off-site backup (docker compose --profile backup up -d)
+  litestream:
+    image: litestream/litestream:0.3.13
+    profiles: [backup]
+    restart: unless-stopped
+    depends_on: [app]
+    command: replicate
+    environment:
+      LITESTREAM_ACCESS_KEY_ID: ${LITESTREAM_ACCESS_KEY_ID:-}
+      LITESTREAM_SECRET_ACCESS_KEY: ${LITESTREAM_SECRET_ACCESS_KEY:-}
+      LITESTREAM_BUCKET: ${LITESTREAM_BUCKET:-}
+      LITESTREAM_ENDPOINT: ${LITESTREAM_ENDPOINT:-}
+    volumes:
+      - atlas-data:/data
+      - ./litestream.yml:/etc/litestream.yml:ro
+    networks: [internal]
+    security_opt: ["no-new-privileges:true"]
+
+secrets:
+  admin_password:
+    file: ./secrets/admin_password.txt
+
+volumes:
+  atlas-data:
+  caddy-data:
+  caddy-config:
+
+networks:
+  internal:

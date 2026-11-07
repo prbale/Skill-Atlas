@@ -1,0 +1,39 @@
+# Dependencies
+/node_modules/
+
+# Local runtime data and SQLite databases (including WAL files and snapshots)
+/data/
+/backups/
+/atlas-backups/
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+
+# Secrets and local environment configuration
+/secrets/*
+!/secrets/README.md
+.env
+.env.*
+!.env.example
+
+# Logs and test/build output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+/coverage/
+/test-results/
+/playwright-report/
+
+# Temporary files and operating-system metadata
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+._*
+__MACOSX/

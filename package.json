@@ -1,0 +1,20 @@
+{
+  "name": "skill-atlas",
+  "version": "1.2.0",
+  "description": "Skill Atlas: a mind-map web app for tracking the skills you are learning.",
+  "main": "server.js",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "DATA_DIR=./data COOKIE_SECURE=false REQUIRE_ADMIN_MFA=false node --watch server.js",
+    "test": "node test/security.test.js",
+    "admin": "node scripts/admin-cli.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0"
+  }
+}

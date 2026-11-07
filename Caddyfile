@@ -1,0 +1,19 @@
+# Caddy obtains and renews the HTTPS certificate automatically (ports 80 and 443 must reach this server).
+{$SITE_DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 3MB
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	# Caddy replaces any client-sent X-Forwarded-For with the real client address,
+	# which is what TRUSTED_PROXY_HOPS=1 expects.
+	reverse_proxy app:8080
+}
+
+# Redirect a www. address too (optional):
+# www.{$SITE_DOMAIN} {
+# 	redir https://{$SITE_DOMAIN}{uri} permanent
+# }

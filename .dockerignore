@@ -1,0 +1,17 @@
+node_modules
+data
+secrets
+.env
+.env.*
+!.env.example
+test
+*.zip
+*.tar
+.git
+.github
+__MACOSX
+.DS_Store
+npm-debug.log
+docker-compose*.yml
+Caddyfile
+litestream.yml

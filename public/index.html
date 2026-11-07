@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Skill Atlas: a mind map for the skills you are learning.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%224%22 fill=%22%230F766E%22/%3E%3Ccircle cx=%224.5%22 cy=%226%22 r=%222.4%22 fill=%22%232563EB%22/%3E%3Ccircle cx=%2219.5%22 cy=%226%22 r=%222.4%22 fill=%22%23D9480F%22/%3E%3Ccircle cx=%2219.5%22 cy=%2218%22 r=%222.4%22 fill=%22%234D7C0F%22/%3E%3C/svg%3E">
+<title>Skill Atlas</title>
+<link rel="stylesheet" href="app.css">
+
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="login" class="login" hidden>
+  <div class="login-art">
+    <div class="brand"><span class="brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="var(--root-ink)"/><circle cx="4.5" cy="6" r="2" fill="var(--b1)"/><circle cx="19.5" cy="6" r="2" fill="var(--b2)"/><circle cx="19.5" cy="18" r="2" fill="var(--b6)"/><path d="M6.3 7 9.6 10.3M17.7 7l-3.3 3.3M17.7 17l-3.3-3.3" stroke="var(--root-ink)" stroke-width="1.6" stroke-linecap="round"/></svg></span><span>Skill Atlas</span></div>
+    <div>
+      <h1>Every skill you learn, <em>mapped.</em></h1>
+      <p class="lede">Lay out topics as a mind map. Keep the notes, key pointers and course links behind each one, and watch the map turn green as you master it.</p>
+    </div>
+    <svg class="art-svg" viewBox="0 0 560 250" role="img" aria-label="Example mind map for learning Kotlin">
+      <path class="e" style="stroke:var(--b1)" d="M210 125C170 125 170 55 130 55"/>
+      <path class="e" style="stroke:var(--b2)" d="M210 125C170 125 170 195 130 195"/>
+      <path class="e" style="stroke:var(--b3)" d="M350 125C390 125 390 50 430 50"/>
+      <path class="e" style="stroke:var(--b4)" d="M350 125C390 125 390 125 430 125"/>
+      <path class="e" style="stroke:var(--b6)" d="M350 125C390 125 390 200 430 200"/>
+      <rect x="210" y="100" width="140" height="50" rx="14" fill="var(--root-bg)"/>
+      <text class="rt" x="280" y="131" text-anchor="middle">Kotlin</text>
+      <rect class="n" x="30" y="37" width="100" height="36" rx="18" style="stroke:var(--b1)"/><text class="t" x="80" y="60" text-anchor="middle">Basics</text>
+      <rect class="n" x="20" y="177" width="110" height="36" rx="18" style="stroke:var(--b2)"/><text class="t" x="75" y="200" text-anchor="middle">Coroutines</text>
+      <rect class="n" x="430" y="32" width="110" height="36" rx="18" style="stroke:var(--b3)"/><text class="t" x="485" y="55" text-anchor="middle">Collections</text>
+      <rect class="n" x="430" y="107" width="110" height="36" rx="18" style="stroke:var(--b4)"/><text class="t" x="485" y="130" text-anchor="middle">Flow</text>
+      <rect class="n" x="430" y="182" width="110" height="36" rx="18" style="stroke:var(--b6)"/><text class="t" x="485" y="205" text-anchor="middle">Multiplatform</text>
+    </svg>
+  </div>
+  <div class="login-side">
+    <form class="login-card" id="loginForm" novalidate>
+      <div>
+        <h2>Sign in</h2>
+        <p id="authSubtitle">Pick up your maps where you left them.</p>
+      </div>
+      <div class="field"><label for="lgUser">Username</label><input id="lgUser" autocomplete="username" maxlength="40" autocapitalize="none" spellcheck="false" placeholder="e.g. prashant"></div>
+      <div class="field"><label for="lgPass">Password</label><input id="lgPass" type="password" autocomplete="current-password" placeholder="Your password" maxlength="128" required></div>
+      <div class="field" id="inviteField" hidden><label for="lgInvite">Invite code</label><input id="lgInvite" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="XXXX-XXXX-XXXX"></div>
+      <div class="field" id="confirmField" hidden><label for="lgConfirm">Confirm password</label><input id="lgConfirm" type="password" autocomplete="new-password" placeholder="Enter the password again" minlength="12"></div>
+      <div class="field" id="mfaField" hidden><label for="lgCode">6-digit code from your authenticator app</label><input id="lgCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"></div>
+      <p class="err" id="lgErr" hidden></p>
+      <button class="btn primary" type="submit">Sign in</button>
+      <p id="authSwitch"><span id="authSwitchText">New to Skill Atlas?</span> <button class="text-btn" id="authModeBtn" type="button">Create an account</button></p>
+      <div class="demo-note">Passwords are hashed with scrypt, sign-in can be protected with two-step verification, and your maps are private to your account.</div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="app" hidden>
+  <header class="top">
+    <button class="icon-btn" id="menuBtn" aria-label="Open map list"></button>
+    <div class="brand"><span class="brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="var(--root-ink)"/><circle cx="4.5" cy="6" r="2" fill="var(--b1)"/><circle cx="19.5" cy="6" r="2" fill="var(--b2)"/><circle cx="19.5" cy="18" r="2" fill="var(--b6)"/><path d="M6.3 7 9.6 10.3M17.7 7l-3.3 3.3M17.7 17l-3.3-3.3" stroke="var(--root-ink)" stroke-width="1.6" stroke-linecap="round"/></svg></span><span>Skill Atlas</span></div>
+    <div class="title-wrap">
+      <label class="sr" for="mapTitle">Map name</label>
+      <input id="mapTitle" type="text" autocomplete="off" maxlength="200">
+      <div class="prog" title="Topics marked Done"><svg class="ring" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="11" style="stroke:var(--line)"/><circle id="ringFg" cx="15" cy="15" r="11" style="stroke:var(--s-done)" stroke-dasharray="69.1" stroke-dashoffset="69.1" transform="rotate(-90 15 15)" stroke-linecap="round"/></svg><span id="progTxt"></span></div>
+      <span class="save-state" id="saveState"></span>
+    </div>
+    <div class="tools" role="toolbar" aria-label="Map tools">
+      <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><label class="sr" for="search">Search topics</label><input id="search" type="text" placeholder="Search topics, notes…" autocomplete="off"><span id="searchCount"></span></div>
+      <label class="sr" for="filter">Show status</label>
+      <select id="filter"><option value="all">All topics</option><option value="todo">To learn</option><option value="learning">Learning</option><option value="done">Done</option></select>
+      <span class="sep"></span>
+      <button class="icon-btn" id="tUndo" title="Undo (Ctrl+Z)" aria-label="Undo"></button>
+      <button class="icon-btn" id="tRedo" title="Redo (Ctrl+Y)" aria-label="Redo"></button>
+      <span class="sep"></span>
+      <button class="icon-btn" id="tChild" title="Add subtopic (Tab)" aria-label="Add subtopic"></button>
+      <button class="icon-btn" id="tSib" title="Add sibling topic (Enter)" aria-label="Add sibling topic"></button>
+      <button class="icon-btn" id="tDel" title="Delete topic (Delete)" aria-label="Delete topic"></button>
+      <span class="sep"></span>
+      <button class="icon-btn" id="tCollapse" title="Collapse all branches" aria-label="Collapse all branches"></button>
+      <button class="icon-btn" id="tExpand" title="Expand all branches" aria-label="Expand all branches"></button>
+      <span class="sep"></span>
+      <button class="icon-btn" id="tTheme" title="Switch light or dark" aria-label="Switch light or dark theme"></button>
+      <button class="icon-btn" id="tMore" title="More" aria-label="More options" aria-haspopup="menu"></button>
+    </div>
+  </header>
+
+  <aside class="side" id="side" aria-label="Your maps">
+    <div class="side-head"><h2>Your skill maps</h2><button class="btn" id="newMap"></button></div>
+    <div class="account-actions"><button class="btn" id="changePassword">Change password</button><button class="btn" id="mfaBtn">Turn on two-step</button><button class="btn" id="adminUsers" hidden>Administration</button></div>
+    <ul id="mapList"></ul>
+    <div class="side-foot"><div class="avatar" id="avatar"></div><div class="who"><b id="whoName"></b><small id="whoSync">Personal account</small></div><button class="icon-btn" id="logout" title="Sign out" aria-label="Sign out"></button></div>
+  </aside>
+
+  <main class="stage" id="stage" aria-label="Mind map canvas">
+    <div id="world"><svg id="edges" aria-hidden="true"></svg><div id="nodes"></div></div>
+    <div class="empty-hint" id="emptyHint" hidden>Click a topic to see its details. Double-click to rename.</div>
+    <div class="hint"><span><kbd>Tab</kbd> subtopic</span><span><kbd>Enter</kbd> sibling</span><span><kbd>F2</kbd> rename</span><span><kbd>Space</kbd> fold</span><button class="icon-btn sm" id="hintKeys" aria-label="All keyboard shortcuts" title="All shortcuts">?</button></div>
+    <div class="zoombar">
+      <button class="auto-toggle" id="tAuto" aria-pressed="true" title="Keep the map neatly arranged automatically"><span class="switch"></span><span class="lbl">Auto-arrange</span></button>
+      <button class="icon-btn" id="tTidy" title="Tidy layout now" aria-label="Tidy layout now"></button>
+      <span class="sep"></span>
+      <button class="icon-btn" id="zOut" aria-label="Zoom out" title="Zoom out (−)"></button>
+      <button id="zoomPct" title="Fit map to screen (0)">100%</button>
+      <button class="icon-btn" id="zIn" aria-label="Zoom in" title="Zoom in (+)"></button>
+      <button class="icon-btn" id="zFit" aria-label="Fit to screen" title="Fit to screen (0)"></button>
+    </div>
+  </main>
+
+  <aside class="panel" id="panel" aria-label="Topic details"></aside>
+</div>
+<div id="scrim" hidden></div>
+<div id="modal" class="modal" hidden><div class="modal-card" role="dialog" aria-modal="true" id="modalCard"></div></div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+
+<script src="vendor/qrcode.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>

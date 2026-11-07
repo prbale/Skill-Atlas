@@ -1,0 +1,26 @@
+# Local trial on your own computer over plain HTTP (never use this on a server).
+#   echo 'choose-a-long-local-password' > secrets/admin_password.txt
+#   docker compose -f docker-compose.dev.yml up -d --build   → http://localhost:8080
+name: skill-atlas-dev
+services:
+  app:
+    image: skill-atlas:1.2.0
+    build: .
+    ports: ["127.0.0.1:8080:8080"]     # bound to this computer only
+    environment:
+      NODE_ENV: development
+      COOKIE_SECURE: "false"
+      REGISTRATION: ${REGISTRATION:-invite}
+      REQUIRE_ADMIN_MFA: ${REQUIRE_ADMIN_MFA:-false}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-prashant-admin}
+      ADMIN_PASSWORD_FILE: /run/secrets/admin_password
+    secrets: [admin_password]
+    volumes: [atlas-dev-data:/data]
+    read_only: true
+    tmpfs: ["/tmp"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+secrets:
+  admin_password: { file: ./secrets/admin_password.txt }
+volumes:
+  atlas-dev-data:

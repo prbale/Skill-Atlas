@@ -1,0 +1,13 @@
+# Continuous replication of the SQLite database to S3-compatible storage
+# (AWS S3, Cloudflare R2, Backblaze B2, MinIO). Values come from .env.
+# Restore:  docker run --rm -v skill-atlas_atlas-data:/data -v $PWD/litestream.yml:/etc/litestream.yml \
+#             --env-file .env litestream/litestream:0.3.13 restore -o /data/skill-atlas.sqlite /data/skill-atlas.sqlite
+dbs:
+  - path: /data/skill-atlas.sqlite
+    replicas:
+      - type: s3
+        bucket: ${LITESTREAM_BUCKET}
+        path: skill-atlas
+        endpoint: ${LITESTREAM_ENDPOINT}
+        retention: 168h
+        sync-interval: 10s
