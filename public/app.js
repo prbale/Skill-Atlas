@@ -10,17 +10,50 @@ const store={
   set(k,v,ss){try{(ss?sessionStorage:localStorage).setItem(k,JSON.stringify(v));return true}catch(e){return false}},
   del(k,ss){try{(ss?sessionStorage:localStorage).removeItem(k)}catch(e){}}
 };
+const activity=(()=>{
+  let serial=0,showTimer=null,hideTimer=null,visible=false;
+  const pending=new Map();
+  const update=()=>{
+    const indicator=$('#activityIndicator');
+    if(!indicator)return;
+    const latest=Array.from(pending.values()).pop();
+    if(latest)$('#activityLabel').textContent=latest;
+    if(pending.size){
+      clearTimeout(hideTimer);hideTimer=null;
+      if(!visible&&!showTimer)showTimer=setTimeout(()=>{showTimer=null;if(!pending.size)return;visible=true;indicator.hidden=false;requestAnimationFrame(()=>indicator.classList.add('is-visible'))},180);
+    }else{
+      clearTimeout(showTimer);showTimer=null;
+      if(visible){visible=false;indicator.classList.remove('is-visible');hideTimer=setTimeout(()=>{if(!pending.size)indicator.hidden=true},180)}
+    }
+  };
+  return{
+    start(label){const id=++serial;pending.set(id,label);update();return id},
+    end(id){pending.delete(id);update()}
+  };
+})();
+function activityLabel(method,path){
+  if(path==='/login'||path==='/register')return method==='POST'?'Signing in…':'Working…';
+  if(path==='/me'||path==='/config')return 'Checking your account…';
+  if(path==='/data')return method==='GET'?'Loading your maps…':'Saving your maps…';
+  if(path.startsWith('/data/history'))return method==='GET'?'Loading history…':'Restoring version…';
+  if(path.startsWith('/admin'))return method==='GET'?'Loading administration…':'Updating administration…';
+  if(path.startsWith('/me/'))return 'Updating account security…';
+  return 'Working…';
+}
 const API={
   async req(method,path,body){
-    const headers={'Accept':'application/json'};const opts={method,headers,credentials:'same-origin'};
-    if(method!=='GET'){headers['Content-Type']='application/json';opts.body=JSON.stringify(body===undefined?{}:body)}
-    let r;try{r=await fetch('/api'+path,opts)}catch(e){const er=new Error('offline');er.offline=true;throw er}
-    let json=null;try{json=await r.json()}catch(_){}
-    const err=()=>Object.assign(new Error((json&&json.error)||('Server error ('+r.status+')')),{status:r.status,code:json&&json.code,body:json});
-    const authPath=path==='/login'||path==='/register';
-    if(r.status===401&&!authPath){const e=err();e.auth=true;if(!json||!json.error||json.error==='Please sign in.')e.message='Your session has ended. Please sign in again.';throw e}
-    if(!r.ok)throw err();
-    return json;
+    const task=activity.start(activityLabel(method,path));
+    try{
+      const headers={'Accept':'application/json'};const opts={method,headers,credentials:'same-origin'};
+      if(method!=='GET'){headers['Content-Type']='application/json';opts.body=JSON.stringify(body===undefined?{}:body)}
+      let r;try{r=await fetch('/api'+path,opts)}catch(e){const er=new Error('offline');er.offline=true;throw er}
+      let json=null;try{json=await r.json()}catch(_){}
+      const err=()=>Object.assign(new Error((json&&json.error)||('Server error ('+r.status+')')),{status:r.status,code:json&&json.code,body:json});
+      const authPath=path==='/login'||path==='/register';
+      if(r.status===401&&!authPath){const e=err();e.auth=true;if(!json||!json.error||json.error==='Please sign in.')e.message='Your session has ended. Please sign in again.';throw e}
+      if(!r.ok)throw err();
+      return json;
+    }finally{activity.end(task)}
   }
 };
 /* Only http(s) links are ever rendered or saved (blocks javascript:, data: and similar). */

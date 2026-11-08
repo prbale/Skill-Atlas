@@ -247,6 +247,16 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
 .toast{pointer-events:auto;background:var(--root-bg);color:var(--root-ink);border-radius:10px;padding:10px 14px;font-size:13.5px;display:flex;gap:14px;align-items:center;box-shadow:var(--shadow);animation:up .2s ease-out}
 .toast button{border:0;background:transparent;color:var(--accent);font-weight:700;padding:0}
 :root[data-theme="dark"] .toast button{color:#0F766E}
+.activity-indicator{position:fixed;right:max(18px,env(safe-area-inset-right,0px));top:calc(18px + env(safe-area-inset-top,0px));z-index:60;display:flex;align-items:center;gap:11px;min-height:44px;padding:0 15px 0 12px;border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));border-radius:999px;background:color-mix(in srgb,var(--surface) 88%,transparent);color:var(--ink);box-shadow:0 8px 26px rgba(15,23,42,.14),inset 0 1px rgba(255,255,255,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);font-size:12.5px;font-weight:650;letter-spacing:.01em;opacity:0;transform:translateY(-8px) scale(.96);transition:opacity .18s ease,transform .18s ease;pointer-events:none}
+.activity-indicator.is-visible{opacity:1;transform:translateY(0) scale(1)}
+.activity-orbit{position:relative;width:23px;height:23px;display:grid;place-items:center;flex:none;border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:50%;animation:activity-spin 1.8s linear infinite}
+.activity-orbit::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px color-mix(in srgb,var(--accent) 75%,transparent);animation:activity-core 1.2s ease-in-out infinite alternate}
+.activity-orbit i{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--accent)}
+.activity-orbit i:nth-child(1){top:-2px;left:8px}.activity-orbit i:nth-child(2){right:-1px;bottom:4px;opacity:.65}.activity-orbit i:nth-child(3){left:1px;bottom:1px;opacity:.4}
+.activity-pulse{width:6px;height:6px;margin-left:2px;border-radius:50%;background:var(--accent);animation:activity-pulse 1.4s ease-in-out infinite;flex:none}
+@keyframes activity-spin{to{transform:rotate(360deg)}}
+@keyframes activity-core{to{transform:scale(.62);opacity:.65}}
+@keyframes activity-pulse{50%{opacity:.35;box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 12%,transparent)}}
 @keyframes up{from{transform:translateY(8px);opacity:0}}
 #scrim{position:fixed;inset:0;background:rgba(10,14,24,.4);z-index:3}
 

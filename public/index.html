@@ -111,6 +111,11 @@
 <div id="scrim" hidden></div>
 <div id="modal" class="modal" hidden><div class="modal-card" role="dialog" aria-modal="true" id="modalCard"></div></div>
 <div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="activityIndicator" class="activity-indicator" role="status" aria-live="polite" aria-atomic="true" hidden>
+  <span class="activity-orbit" aria-hidden="true"><i></i><i></i><i></i></span>
+  <span id="activityLabel">Working…</span>
+  <span class="activity-pulse" aria-hidden="true"></span>
+</div>
 
 <script src="vendor/qrcode.js" defer></script>
 <script src="app.js" defer></script>
