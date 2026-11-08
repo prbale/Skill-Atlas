@@ -464,6 +464,13 @@ function showKeys(){const k=(keys,label)=>`<span>${keys.map(x=>`<span class="kbd
 
 /* ---------------- account: password, two-step verification ---------------- */
 function pwFields(prefix,withCurrent){return `${withCurrent?`<div class="field"><label for="${prefix}Cur">Current password</label><input id="${prefix}Cur" type="password" autocomplete="current-password" maxlength="128" required></div>`:''}<div class="field"><label for="${prefix}New">New password</label><input id="${prefix}New" type="password" autocomplete="new-password" minlength="12" maxlength="128" required><small class="hint-text">At least 12 characters. A few unrelated words work well.</small></div><div class="field"><label for="${prefix}Conf">Confirm new password</label><input id="${prefix}Conf" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></div>`}
+function setButtonBusy(button,label){
+  if(!button)return()=>{};
+  const html=button.innerHTML,disabled=button.disabled;
+  button.disabled=true;button.setAttribute('aria-busy','true');
+  button.innerHTML=`<span class="button-spinner" aria-hidden="true"></span><span>${esc(label)}</span>`;
+  return()=>{button.innerHTML=html;button.disabled=disabled;button.removeAttribute('aria-busy')};
+}
 function showChangePassword(forced){
   openModal(`<h2>${forced?'Choose a new password':'Change password'}</h2><p>${forced?'Your account has a temporary password. Choose your own password to continue.':'Other devices signed in to your account will be signed out.'}</p><form id="pwForm">${pwFields('pw',true)}<p class="err" id="pwErr" hidden></p><div class="row">${forced?'<button class="btn" type="button" data-out>Sign out</button>':'<button class="btn" type="button" data-x>Cancel</button>'}<button class="btn primary" type="submit">Save password</button></div></form>`,c=>{
     const x=c.querySelector('[data-x]');if(x)x.onclick=()=>closeModal();
@@ -472,8 +479,10 @@ function showChangePassword(forced){
       e.preventDefault();const err=c.querySelector('#pwErr');const cur_=c.querySelector('#pwCur').value,nw=c.querySelector('#pwNew').value;
       if(nw.length<12){err.textContent='Choose a password with at least 12 characters.';err.hidden=false;return}
       if(nw!==c.querySelector('#pwConf').value){err.textContent='The new passwords do not match.';err.hidden=false;return}
+      const restoreButton=setButtonBusy(c.querySelector('button[type="submit"]'),'Updating password…');err.hidden=true;
       try{await API.req('POST','/me/password',{currentPassword:cur_,newPassword:nw});session.user.mustChangePassword=false;closeModal(true);toast('Password updated. Other devices were signed out.');if(forced)enterApp()}
       catch(ex){if(ex.auth){forceLogout(ex.message);return}err.textContent=ex.message;err.hidden=false}
+      finally{restoreButton()}
     };
   },{locked:!!forced});
 }
@@ -485,20 +494,20 @@ function showMfa(){
     const mustKeep=u.role==='admin'&&adminMfaRequired;
     openModal(`<h2>Two-step verification is on</h2><p>Signing in needs your password and a 6-digit code from your authenticator app.</p>${mustKeep?'<p>Administrators must keep two-step verification on. If you lose your phone, another administrator can reset it, or run <code>node scripts/admin-cli.js reset-mfa '+esc(u.username)+'</code> on the server.</p><div class="row"><button class="btn primary" data-x>Done</button></div>':`<form id="mfaOff"><div class="field"><label for="mfaOffPw">Password</label><input id="mfaOffPw" type="password" autocomplete="current-password" required></div><div class="field"><label for="mfaOffCode">Current 6-digit code</label><input id="mfaOffCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></div><p class="err" id="mfaOffErr" hidden></p><div class="row"><button class="btn" type="button" data-x>Keep it on</button><button class="btn danger" type="submit">Turn off</button></div></form>`}`,c=>{
       c.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>closeModal());
-      const f=c.querySelector('#mfaOff');if(f)f.onsubmit=async e=>{e.preventDefault();const err=c.querySelector('#mfaOffErr');try{await API.req('POST','/me/mfa/disable',{password:c.querySelector('#mfaOffPw').value,code:c.querySelector('#mfaOffCode').value});u.mfaEnabled=false;closeModal();toast('Two-step verification turned off')}catch(ex){err.textContent=ex.message;err.hidden=false}};
+      const f=c.querySelector('#mfaOff');if(f)f.onsubmit=async e=>{e.preventDefault();const err=c.querySelector('#mfaOffErr');const restoreButton=setButtonBusy(f.querySelector('button[type="submit"]'),'Turning off…');err.hidden=true;try{await API.req('POST','/me/mfa/disable',{password:c.querySelector('#mfaOffPw').value,code:c.querySelector('#mfaOffCode').value});u.mfaEnabled=false;closeModal();toast('Two-step verification turned off')}catch(ex){err.textContent=ex.message;err.hidden=false}finally{restoreButton()}};
     });return;
   }
   openModal(`<h2>Turn on two-step verification</h2><p>After this, signing in needs your password and a code from an authenticator app such as Google Authenticator, Microsoft Authenticator or 1Password. A stolen password alone won’t be enough.</p><form id="mfaStart"><div class="field"><label for="mfaPw">Confirm your password</label><input id="mfaPw" type="password" autocomplete="current-password" required></div><p class="err" id="mfaErr" hidden></p><div class="row"><button class="btn" type="button" data-x>Cancel</button><button class="btn primary" type="submit">Continue</button></div></form>`,c=>{
     c.querySelector('[data-x]').onclick=()=>closeModal();
     c.querySelector('#mfaStart').onsubmit=async e=>{
-      e.preventDefault();const err=c.querySelector('#mfaErr');let setup;
-      try{setup=await API.req('POST','/me/mfa/setup',{password:c.querySelector('#mfaPw').value})}catch(ex){err.textContent=ex.message;err.hidden=false;return}
+      e.preventDefault();const err=c.querySelector('#mfaErr');let setup;const restoreButton=setButtonBusy(c.querySelector('button[type="submit"]'),'Preparing setup…');err.hidden=true;
+      try{setup=await API.req('POST','/me/mfa/setup',{password:c.querySelector('#mfaPw').value})}catch(ex){err.textContent=ex.message;err.hidden=false;restoreButton();return}
       let qr='';try{const q=qrcode(0,'M');q.addData(setup.uri);q.make();qr=q.createSvgTag(4,2)}catch(_){}
       const grouped=setup.secret.match(/.{1,4}/g).join(' ');
       openModal(`<h2>Scan with your authenticator app</h2><div class="mfa-setup"><div class="qr" aria-label="QR code for your authenticator app">${qr}</div><div><p>Can’t scan? Add an account manually with this key:</p><code class="code-box" id="mfaKey">${esc(grouped)}</code><button class="btn" type="button" data-copy>Copy key</button></div></div><form id="mfaVerify"><div class="field"><label for="mfaCode">Enter the 6-digit code the app shows</label><input id="mfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></div><p class="err" id="mfaVErr" hidden></p><div class="row"><button class="btn" type="button" data-x>Cancel</button><button class="btn primary" type="submit">Turn on</button></div></form>`,c2=>{
         c2.querySelector('[data-x]').onclick=()=>closeModal();
         c2.querySelector('[data-copy]').onclick=()=>copyText(setup.secret,null);
-        c2.querySelector('#mfaVerify').onsubmit=async ev=>{ev.preventDefault();const er=c2.querySelector('#mfaVErr');try{await API.req('POST','/me/mfa/enable',{code:c2.querySelector('#mfaCode').value.trim()});session.user.mfaEnabled=true;closeModal();toast('Two-step verification is on');renderAccount()}catch(ex){er.textContent=ex.message;er.hidden=false}};
+        c2.querySelector('#mfaVerify').onsubmit=async ev=>{ev.preventDefault();const er=c2.querySelector('#mfaVErr');const restoreButton=setButtonBusy(c2.querySelector('button[type="submit"]'),'Verifying code…');er.hidden=true;try{await API.req('POST','/me/mfa/enable',{code:c2.querySelector('#mfaCode').value.trim()});session.user.mfaEnabled=true;closeModal();toast('Two-step verification is on');renderAccount()}catch(ex){er.textContent=ex.message;er.hidden=false}finally{restoreButton()}};
       });
     };
   });

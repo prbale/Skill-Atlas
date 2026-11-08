@@ -56,6 +56,9 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .btn.danger-ghost{color:var(--danger)}
 .btn.danger-ghost:hover{background:var(--danger-soft)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
+.btn[aria-busy=true]{opacity:.85;cursor:progress}
+.button-spinner{width:14px;height:14px;flex:none;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:button-spin .7s linear infinite}
+@keyframes button-spin{to{transform:rotate(360deg)}}
 .icon-btn{display:inline-grid;place-items:center;width:34px;height:34px;border:0;border-radius:8px;background:transparent;color:var(--ink)}
 .icon-btn:hover{background:var(--surface-2)}
 .icon-btn:disabled{opacity:.35;cursor:not-allowed;background:transparent}
